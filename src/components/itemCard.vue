@@ -28,9 +28,9 @@ export default defineComponent({
     <div class="close_btn_wrapper" @click="$emit('closeCard')">
       <img class="close_btn" src="/src/assets/closeBtn.svg" />
     </div>
-    <div class="item_image_wrapper">
-      <div class="item_image">
-        <img src="/src/assets/Item_Image_green_big.png" :alt="`image`" />
+    <div class="item_image_wrapper" draggable="false">
+      <div class="item_image" draggable="false">
+        <img src="/src/assets/Item_Image_green_big.png" :alt="`image`" draggable="false"/>
       </div>
     </div>
     <div class="info_text">

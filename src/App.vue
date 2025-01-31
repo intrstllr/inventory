@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { ItemInventoryType } from "../src/types";
+import type { ItemInventoryType,DataStorageType } from "../src/types";
 import ItemInventory from "./components/itemInventory.vue";
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref,onMounted , watch } from "vue";
 import ItemCard from "./components/itemCard.vue";
 const items = ref<ItemInventoryType[][]>([
   [
@@ -39,7 +39,7 @@ const items = ref<ItemInventoryType[][]>([
     { image: "", count: 0, id: 0 },
     { image: "", count: 0, id: 0 },
   ],
-]);
+] );
 
 export default defineComponent({
   components: {
@@ -65,9 +65,8 @@ export default defineComponent({
       rowIndex: number,
       itemIndex: number
     ) => {
-      console.log(event);
       const target = event.target as HTMLElement;
-      target.style.border = "2px solid #4d4d4d";
+      target.style.border = "1px solid #4d4d4d";
       target.style.borderRadius = "10px";
       draggedItem.value = item;
       draggedFromRow.value = rowIndex;
@@ -84,10 +83,14 @@ export default defineComponent({
         dragEnd();
       }
     };
-    const dragEnd = () => {
+    const dragEnd = (event: DragEvent,) => {
+      const target = event.target as HTMLElement;
+      target.style.border = "1px solid #4d4d4d";
+      target.style.borderRadius = "0px";
       draggedItem.value = { image: "", count: 0, id: 0 };
       draggedFromRow.value = -1;
       draggedFromIndex.value = -1;
+
     };
     const showItem = (
       item: ItemInventoryType,
@@ -99,6 +102,41 @@ export default defineComponent({
       selectedItemRowIndex.value = rowIndex;
       selectedItemColIndex.value = itemIndex;
     };
+    onMounted(() => {
+      const savedDataString = localStorage.getItem('itemsPosition');
+      if (savedDataString) {
+        for (let row = 0; row < items.value.length; row++) {
+              for (let col = 0; col < items.value[row].length; col++) {
+                if(items.value[row][col].id != 0){
+                  items.value[row][col] = { image: "", count: 0, id: 0 }
+                }
+              }
+        }
+        try {
+          const savedData: DataStorageType[] = JSON.parse(savedDataString);
+          savedData.forEach(element => {
+            items.value[element.indexRow][element.indexCol] = { image: element.image, count: element.count, id: element.id }
+          });
+        }
+        catch (error) {
+          console.error('Ошибка при парсинге данных из localStorage:', error);
+        }
+      }
+    })
+    watch(items, (newValue) => {
+      const dataToSave: DataStorageType[] = []
+      newValue.forEach((row, indexRow) => 
+        row.forEach((item, indexCol) => item.id != 0 ? dataToSave.push({
+          indexRow,
+          indexCol,
+          image: item.image,
+          count: item.count,
+          id: item.id
+        }) : null)
+      );
+
+      localStorage.setItem('itemsPosition', JSON.stringify(dataToSave));
+    }, { deep: true });
 
     return {
       items,
@@ -111,9 +149,11 @@ export default defineComponent({
       isSuccesDeleteItem,
       selectedItemRowIndex,
       selectedItemColIndex,
-    };
-  },
+    }; 
+  }
+  
 });
+
 </script>
 
 <template>
